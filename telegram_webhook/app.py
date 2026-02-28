@@ -110,7 +110,7 @@ def lambda_handler(event, context):
             
         try:
             update = json.loads(body) if isinstance(body, str) else body
-        except:
+        except Exception:
             return {"statusCode": 200, "body": "Invalid JSON"}
             
         message = update.get('message', {})
