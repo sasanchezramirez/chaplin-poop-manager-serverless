@@ -1,12 +1,16 @@
 import json
 import os
 import boto3
+import urllib.request
+import urllib.parse
 from datetime import datetime
 
 dynamodb = boto3.resource('dynamodb')
 table_name = os.environ.get('TABLE_NAME', 'ChaplinEvents')
 table = dynamodb.Table(table_name)
 expected_api_key = os.environ.get('API_KEY')
+TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
+TELEGRAM_CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID')
 
 def lambda_handler(event, context):
     try:
@@ -48,6 +52,26 @@ def lambda_handler(event, context):
         
         # Write to DynamoDB
         table.put_item(Item=item)
+        
+        # --- Telegram Integration ---
+        try:
+            if TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID:
+                tipo_msg = "un popó 💩" if estimated_type == "feces" else "un pipí 💧"
+                message_text = f"🐾 *¡Alerta Arenero!*\n\nChaplin acaba de hacer {tipo_msg}.\n⏱️ Duración: {duration_seconds} segundos."
+                
+                telegram_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+                data = urllib.parse.urlencode({
+                    'chat_id': TELEGRAM_CHAT_ID,
+                    'text': message_text,
+                    'parse_mode': 'Markdown'
+                }).encode('utf-8')
+                
+                req = urllib.request.Request(telegram_url, data=data, method='POST')
+                with urllib.request.urlopen(req, timeout=5) as response:
+                    print(f"Telegram notification sent. Status: {response.status}")
+        except Exception as tel_err:
+            print(f"Failed to send Telegram notification: {str(tel_err)}")
+            # We don't return an error to the user if ONLY telegram fails.
         
         return {
             "statusCode": 200,

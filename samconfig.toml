@@ -8,7 +8,7 @@ region = "us-east-1"
 confirm_changeset = true
 capabilities = "CAPABILITY_IAM"
 disable_rollback = true
-parameter_overrides = "ChaplinApiKey=\"CPCPADOIRLSA38\""
+parameter_overrides = "ChaplinApiKey=\"CPCPADOIRLSA38\" TelegramBotToken=\"8509299704:AAHnRn8VIQSaXIIW8t78874GrnFJpHs2ggM\" TelegramChatId=\"7007953172\""
 image_repositories = []
 
 [default.global.parameters]

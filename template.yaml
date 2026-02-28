@@ -9,7 +9,13 @@ Parameters:
   ChaplinApiKey:
     Type: String
     Description: Secret API Key to be used by the ESP32 to authorize requests.
-    Default: "CPCPADOIRLSA38"
+    Default: "chaplin-super-secret-key-change-me"
+  TelegramBotToken:
+    Type: String
+    Description: Telegram Bot HTTP API Token
+  TelegramChatId:
+    Type: String
+    Description: Telegram Chat ID to send notifications to
 
 Globals:
   Function:
@@ -57,6 +63,8 @@ Resources:
         Variables:
           TABLE_NAME: !Ref ChaplinEventsTable
           API_KEY: !Ref ChaplinApiKey
+          TELEGRAM_BOT_TOKEN: !Ref TelegramBotToken
+          TELEGRAM_CHAT_ID: !Ref TelegramChatId
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref ChaplinEventsTable
