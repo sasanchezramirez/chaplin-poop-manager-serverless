@@ -1,0 +1,77 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  ChaplinPoopManager-AWS
+  
+  Serverless backend for Chaplin Poop Manager using AWS SAM.
+
+Parameters:
+  ChaplinApiKey:
+    Type: String
+    Description: Secret API Key to be used by the ESP32 to authorize requests.
+    Default: "CPCPADOIRLSA38"
+
+Globals:
+  Function:
+    Timeout: 5
+    MemorySize: 128
+    Runtime: python3.12
+    Architectures:
+      - x86_64
+
+Resources:
+  ChaplinEventsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: ChaplinEvents
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: pet_id
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: N
+      KeySchema:
+        - AttributeName: pet_id
+          KeyType: HASH
+        - AttributeName: timestamp
+          KeyType: RANGE
+
+  ChaplinHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowOrigins:
+          - "*"
+        AllowHeaders:
+          - "*"
+        AllowMethods:
+          - POST
+          - OPTIONS
+
+  IngestionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ingestion_function/
+      Handler: app.lambda_handler
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref ChaplinEventsTable
+          API_KEY: !Ref ChaplinApiKey
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ChaplinEventsTable
+      Events:
+        IngestEvent:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ChaplinHttpApi
+            Path: /ingest
+            Method: post
+
+Outputs:
+  ApiEndpoint:
+    Description: "API Gateway endpoint URL for Prod stage"
+    Value: !Sub "https://${ChaplinHttpApi}.execute-api.${AWS::Region}.amazonaws.com/ingest"
+  IngestionFunctionArn:
+    Description: "Ingestion Lambda Function ARN"
+    Value: !GetAtt IngestionFunction.Arn
