@@ -76,10 +76,44 @@ Resources:
             Path: /ingest
             Method: post
 
+  TelegramWebhookFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: telegram_webhook/
+      Handler: app.lambda_handler
+      Timeout: 30  # Bedrock calls can take longer
+      MemorySize: 256 # A bit more memory for Bedrock logic
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref ChaplinEventsTable
+          TELEGRAM_BOT_TOKEN: !Ref TelegramBotToken
+          TELEGRAM_CHAT_ID: !Ref TelegramChatId
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref ChaplinEventsTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+              Resource: "*"
+      Events:
+        WebhookEvent:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ChaplinHttpApi
+            Path: /telegram-webhook
+            Method: post
+
 Outputs:
   ApiEndpoint:
     Description: "API Gateway endpoint URL for Prod stage"
     Value: !Sub "https://${ChaplinHttpApi}.execute-api.${AWS::Region}.amazonaws.com/ingest"
+  WebhookEndpoint:
+    Description: "API Gateway endpoint URL for Telegram Webhook"
+    Value: !Sub "https://${ChaplinHttpApi}.execute-api.${AWS::Region}.amazonaws.com/telegram-webhook"
   IngestionFunctionArn:
     Description: "Ingestion Lambda Function ARN"
     Value: !GetAtt IngestionFunction.Arn
+  WebhookFunctionArn:
+    Description: "Telegram Webhook Lambda Function ARN"
+    Value: !GetAtt TelegramWebhookFunction.Arn
