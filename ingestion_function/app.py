@@ -57,7 +57,7 @@ def lambda_handler(event, context):
         try:
             if TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID:
                 tipo_msg = "una fulk 💩" if estimated_type == "feces" else "una miadita 💧"
-                message_text = f"🐾 *¡Alerta Arenero!*\n\nChaplin acaba de pegarse {tipo_msg}.\n⏱️ Duración: {duration_seconds} segundos."
+                message_text = f"*¡Alerta Arenero!*\n\nChaplin acaba de pegarse {tipo_msg}.\nDuración: {duration_seconds} segundos."
                 
                 telegram_url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
                 data = urllib.parse.urlencode({
