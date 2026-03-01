@@ -125,6 +125,26 @@ def lambda_handler(event, context):
         if not text:
             return {"statusCode": 200, "body": "No text"}
             
+        # Detectar el comando de limpieza
+        if text.strip().lower() == '/arena_limpia':
+            try:
+                # Guardar el evento en DynamoDB
+                current_timestamp = int(datetime.utcnow().timestamp())
+                table.put_item(
+                    Item={
+                        "pet_id": "chaplin",
+                        "timestamp": current_timestamp,
+                        "estimated_type": "limpieza_arenero"                    }
+                )
+                send_telegram_message(chat_id, "✅ ¡Recibido! He registrado que acabas de limpiar el arenero de Chaplin.")
+                return {"statusCode": 200, "body": "Clean event logged"}
+            except Exception as e:
+                print(f"Error logging clean event: {e}")
+                send_telegram_message(chat_id, "❌ Hubo un error al intentar guardar el registro de limpieza en la base de datos.")
+                return {"statusCode": 500, "body": "DynamoDB Error"}
+            
+        # --- Flujo normal de Chat con IA ---
+        
         # 1. Fetch History
         history = get_recent_history(days=7)
         history_json = json.dumps(history, indent=2, ensure_ascii=False)
@@ -139,7 +159,8 @@ def lambda_handler(event, context):
             "1. Responde preguntas basándote ESTRICTAMENTE en estos datos.\n"
             "2. Si la respuesta requiere matemáticas (ej. promedios de tiempo, digestión), haz el cálculo paso a paso y da el resultado final aproximado.\n"
             "3. Sé conciso pero amigable. Usa emojis relevantes.\n"
-            "4. Asume que 'urine' es orina y 'feces' es popó."
+            "4. Asume que 'urine' es orina y 'feces' es popó.\n"
+            "5. Si ves un evento de tipo 'limpieza_arenero', significa que Santiago limpió manualmente el arenero en ese momento exacto."
         )
         
         full_prompt = f"{system_context}\n\nPregunta de Santiago: {text}\nTu respuesta analítica:"

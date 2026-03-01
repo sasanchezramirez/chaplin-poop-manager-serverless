@@ -91,6 +91,8 @@ Resources:
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref ChaplinEventsTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref ChaplinEventsTable
         - Statement:
             - Effect: Allow
               Action:
